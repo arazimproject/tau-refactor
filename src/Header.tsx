@@ -27,7 +27,7 @@ const Header = () => {
         ארזים | TAU Factor
       </h3>
       <a
-        href="https://github.com/arazimproject/tau-search"
+        href="https://github.com/arazimproject/tau-factor"
         className="link show-wide"
       >
         <i
