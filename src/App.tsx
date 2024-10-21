@@ -103,7 +103,7 @@ const App = () => {
                 <p style={{ textAlign: "center", marginBottom: 10 }}>
                   <b style={{ marginInlineEnd: 5 }}>
                     {courseInfo[course]?.name}
-                  </b>{" "}
+                  </b>
                   ({course})
                 </p>
                 <GradeChart grades={gradeInfo[course]} />
