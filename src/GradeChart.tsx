@@ -5,7 +5,7 @@ import { SemesterGrades } from "./typing"
 import ColorHash from "color-hash"
 import { formatSemester } from "./utilities"
 
-const MOEDS = ["קובע", "א", "ב", "ג"]
+const MOEDS = ["קובע", "א'", "ב'", "ג'"]
 const hash = new ColorHash()
 const COLORS = new Array(1000).fill(0).map((_, i) => hash.hex(i.toString()))
 
@@ -48,7 +48,7 @@ const ChartTooltip = ({ label, payload }: ChartTooltipProps) => {
         .sort((a, b) => b.value - a.value)
         .map((item: any) => (
           <Text key={item.name} c={item.color} fz="sm">
-            {item.name}: {item.value}
+            {item.name}: {item.value.toFixed(2)}%
           </Text>
         ))}
     </Paper>
@@ -133,7 +133,7 @@ const GradeChart = ({
               return (
                 <Table.Tr key={yearIndex}>
                   <Table.Td>{formatSemester(semester)}</Table.Td>
-                  <Table.Td>{mean !== 0 && mean}</Table.Td>
+                  <Table.Td>{mean !== 0 && mean?.toFixed(2)}</Table.Td>
                   <Table.Td>
                     {groups.map((group, groupIndex) => (
                       <Chip
@@ -222,8 +222,12 @@ const GradeChart = ({
             for (const year in grades) {
               for (const group in grades[year]) {
                 for (const grade of grades[year][group]) {
+                  let sum = 0
+                  for (const x of grade.distribution) {
+                    sum += x
+                  }
                   result[formatSeriesName(year, group, grade.moed)] =
-                    grade.distribution[index] ?? 0
+                    ((grade.distribution[index] ?? 0) / sum) * 100
                 }
               }
             }
