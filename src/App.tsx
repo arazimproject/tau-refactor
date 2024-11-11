@@ -72,8 +72,14 @@ const App = () => {
                 <p>
                   מאגר הציונים של TAU Factor התקבל מהאתר המקורי
                   www.tau-factor.com. בכדי להוסיף היסטוגרמות ציונים (אנונימיות)
-                  ולעזור לכלל הסטודנטים, אנא התקינו את התוסף ע"י לחיצה על התראה
-                  זו!
+                  ולעזור לכלל הסטודנטים, אנא התקינו את התוסף{" "}
+                  <a
+                    className="link handle text-accent"
+                    href="https://chromewebstore.google.com/detail/tau-factor/ocnjdmhgcphlaeaoneikpobbjlkdpiib"
+                    target="_blank"
+                  >
+                    מכאן!
+                  </a>
                 </p>
 
                 <p>
