@@ -3,6 +3,7 @@ import "@mantine/core/styles.css"
 import "@mantine/charts/styles.css"
 
 import {
+  Alert,
   Autocomplete,
   DirectionProvider,
   Loader,
@@ -10,7 +11,7 @@ import {
 } from "@mantine/core"
 import Footer from "./Footer"
 import Header from "./Header"
-import { useColorScheme } from "@mantine/hooks"
+import { useColorScheme, useLocalStorage } from "@mantine/hooks"
 import { useState } from "react"
 import { useQueryParam, useURLValue } from "./hooks"
 import ColorHash from "color-hash"
@@ -29,6 +30,10 @@ const App = () => {
   const [gradeInfo, loadingGradeInfo] = useURLValue<any>(
     "https://arazim-project.com/courses/grades.json"
   )
+  const [alertOpen, setAlertOpen] = useLocalStorage({
+    key: "Is Alert Open",
+    defaultValue: true,
+  })
 
   return (
     <DirectionProvider>
@@ -52,6 +57,42 @@ const App = () => {
               overflow: "auto",
             }}
           >
+            {alertOpen && (
+              <Alert
+                color="blue"
+                variant="light"
+                w="100%"
+                maw={400}
+                mt="xs"
+                title="עזרו להוסיף מידע ל-TAU Factor!"
+                icon={<i className="fa-solid fa-cloud" />}
+                withCloseButton
+                onClose={() => setAlertOpen(false)}
+              >
+                <p>
+                  מאגר הציונים של TAU Factor התקבל מהאתר המקורי
+                  www.tau-factor.com. בכדי להוסיף היסטוגרמות ציונים (אנונימיות)
+                  ולעזור לכלל הסטודנטים, אנא התקינו את התוסף ע"י לחיצה על התראה
+                  זו!
+                </p>
+
+                <p>
+                  התוסף לא מבצע שום פעולה בלי אישורכם והקוד שלו{" "}
+                  <a
+                    className="link handle text-accent"
+                    href="https://github.com/arazimproject/tau-factor-extension"
+                    target="_blank"
+                  >
+                    פתוח
+                  </a>
+                  . אנא{" "}
+                  <a className="link handle text-accent" href="/contact-us">
+                    פנו אלינו
+                  </a>{" "}
+                  במידה שאתם נתקלים בבעייה.
+                </p>
+              </Alert>
+            )}
             <Autocomplete
               size="md"
               w="100%"

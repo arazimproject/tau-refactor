@@ -35,6 +35,16 @@ const Header = () => {
           style={{ marginInlineStart: 10, fontSize: 24, color: "white" }}
         />
       </a>
+      <a
+        href="https://chromewebstore.google.com/detail/tau-factor/ocnjdmhgcphlaeaoneikpobbjlkdpiib"
+        className="link show-wide"
+        target="_blank"
+      >
+        <i
+          className="fa-brands fa-chrome"
+          style={{ marginInlineStart: 10, fontSize: 24, color: "white" }}
+        />
+      </a>
     </div>
   )
 }
