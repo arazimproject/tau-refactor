@@ -1,9 +1,10 @@
 import { BarChart, BarChartSeries } from "@mantine/charts"
-import { Box, Chip, Paper, Table, Text } from "@mantine/core"
+import { Box, Chip, Loader, Paper, Table, Text } from "@mantine/core"
 import { useState } from "react"
-import { SemesterGrades } from "./typing"
+import { CourseInfo, SemesterGrades } from "./typing"
 import ColorHash from "color-hash"
 import { formatSemester } from "./utilities"
+import { useURLValue } from "./hooks"
 
 const MOEDS = ["קובע", "א'", "ב'", "ג'"]
 const hash = new ColorHash()
@@ -55,10 +56,132 @@ const ChartTooltip = ({ label, payload }: ChartTooltipProps) => {
   )
 }
 
+const GradeTableRow = ({
+  semester,
+  courseId,
+  grades,
+  visibleGroups,
+  setVisibleGroups,
+  visibleMoeds,
+  setVisibleMoeds,
+}: {
+  semester: string
+  courseId: string
+  grades: Record<string, Record<string, SemesterGrades[]>>
+  visibleGroups: Record<string, Record<string, boolean>>
+  setVisibleGroups: React.Dispatch<
+    React.SetStateAction<Record<string, Record<string, boolean>>>
+  >
+  visibleMoeds: Record<string, Record<string, boolean>>
+  setVisibleMoeds: React.Dispatch<
+    React.SetStateAction<Record<string, Record<string, boolean>>>
+  >
+}) => {
+  const maxMoed = Math.max(
+    ...Object.values(grades[semester]).map((grade) =>
+      Math.max(...grade.map((v) => v.moed))
+    )
+  )
+  const groups = Object.keys(grades[semester] ?? {}).sort()
+  const mean = (grades[semester]["00"] ?? []).find((x) => x.moed === 0)?.mean
+  const [semesterInfo, loadingSemesterInfo] = useURLValue<
+    Record<string, CourseInfo>
+  >(`https://arazim-project.com/courses/courses-${semester}.json`)
+
+  const lecturers = new Set<string>()
+  // Initially, only show teahers of שיעור.
+  for (const group of semesterInfo[courseId]?.groups ?? []) {
+    if (!group.lessons.some((lesson) => lesson.type === "שיעור")) {
+      continue
+    }
+
+    for (const lecturer of group.lecturer?.split(",") ?? []) {
+      lecturers.add(lecturer.trim())
+    }
+  }
+  // If this is empty, show everyone.
+  if (lecturers.size === 0) {
+    for (const group of semesterInfo[courseId]?.groups ?? []) {
+      for (const lecturer of group.lecturer?.split(",") ?? []) {
+        lecturers.add(lecturer.trim())
+      }
+    }
+  }
+
+  return (
+    <Table.Tr>
+      <Table.Td>{formatSemester(semester)}</Table.Td>
+      <Table.Td>
+        {loadingSemesterInfo ? (
+          <Loader color="black" size="xs" />
+        ) : (
+          [...lecturers].sort().join(", ")
+        )}
+      </Table.Td>
+      <Table.Td>{mean !== 0 && mean?.toFixed(2)}</Table.Td>
+      <Table.Td>
+        {groups.map((group, groupIndex) => (
+          <Chip
+            size="xs"
+            display="inline-block"
+            color="green"
+            checked={
+              (visibleGroups[semester] ??
+                getDefaultVisibleGroups(grades[semester]))[group] !== false
+            }
+            onChange={(c) => {
+              if (!visibleGroups[semester]) {
+                visibleGroups[semester] = getDefaultVisibleGroups(
+                  grades[semester]
+                )
+              }
+              visibleGroups[semester][group] = c
+              setVisibleGroups({ ...visibleGroups })
+            }}
+            key={groupIndex}
+            mx={5}
+          >
+            {group === "00" ? "כולם" : group}
+          </Chip>
+        ))}
+      </Table.Td>
+      <Table.Td>
+        {maxMoed > 0 &&
+          new Array(maxMoed + 1).fill(0).map((_, moed) => (
+            <Chip
+              size="xs"
+              display="inline-block"
+              color="green"
+              checked={
+                (visibleMoeds[semester] ?? DEFAULT_VISIBLE_MOEDS)[moed] !==
+                false
+              }
+              onChange={(c) => {
+                if (!visibleMoeds[semester]) {
+                  visibleMoeds[semester] = {
+                    ...DEFAULT_VISIBLE_MOEDS,
+                  }
+                }
+                visibleMoeds[semester][moed] = c
+                setVisibleMoeds({ ...visibleMoeds })
+              }}
+              key={moed}
+              mx={5}
+            >
+              {MOEDS[moed]}
+            </Chip>
+          ))}
+      </Table.Td>
+    </Table.Tr>
+  )
+}
+
 const GradeChart = ({
   grades,
+  courseId,
 }: {
   grades: Record<string, Record<string, SemesterGrades[]>>
+  courseId: string
 }) => {
   const [visibleGroups, setVisibleGroups] = useState<
     Record<string, Record<string, boolean>>
@@ -109,6 +232,7 @@ const GradeChart = ({
         <Table.Thead>
           <Table.Tr>
             <Table.Th>סמסטר</Table.Th>
+            <Table.Th>מרצים</Table.Th>
             <Table.Th>ממוצע</Table.Th>
             <Table.Th>קבוצות</Table.Th>
             <Table.Th>מועדים</Table.Th>
@@ -119,80 +243,18 @@ const GradeChart = ({
             .sort()
             .reverse()
             .filter((year) => Object.keys(grades[year]).length !== 0)
-            .map((semester, yearIndex) => {
-              const maxMoed = Math.max(
-                ...Object.values(grades[semester]).map((grade) =>
-                  Math.max(...grade.map((v) => v.moed))
-                )
-              )
-              const groups = Object.keys(grades[semester] ?? {}).sort()
-              const mean = (grades[semester]["00"] ?? []).find(
-                (x) => x.moed === 0
-              )?.mean
-
-              return (
-                <Table.Tr key={yearIndex}>
-                  <Table.Td>{formatSemester(semester)}</Table.Td>
-                  <Table.Td>{mean !== 0 && mean?.toFixed(2)}</Table.Td>
-                  <Table.Td>
-                    {groups.map((group, groupIndex) => (
-                      <Chip
-                        size="xs"
-                        display="inline-block"
-                        color="green"
-                        checked={
-                          (visibleGroups[semester] ??
-                            getDefaultVisibleGroups(grades[semester]))[
-                            group
-                          ] !== false
-                        }
-                        onChange={(c) => {
-                          if (!visibleGroups[semester]) {
-                            visibleGroups[semester] = getDefaultVisibleGroups(
-                              grades[semester]
-                            )
-                          }
-                          visibleGroups[semester][group] = c
-                          setVisibleGroups({ ...visibleGroups })
-                        }}
-                        key={groupIndex}
-                        mx={5}
-                      >
-                        {group === "00" ? "כולם" : group}
-                      </Chip>
-                    ))}
-                  </Table.Td>
-                  <Table.Td>
-                    {maxMoed > 0 &&
-                      new Array(maxMoed + 1).fill(0).map((_, moed) => (
-                        <Chip
-                          size="xs"
-                          display="inline-block"
-                          color="green"
-                          checked={
-                            (visibleMoeds[semester] ?? DEFAULT_VISIBLE_MOEDS)[
-                              moed
-                            ] !== false
-                          }
-                          onChange={(c) => {
-                            if (!visibleMoeds[semester]) {
-                              visibleMoeds[semester] = {
-                                ...DEFAULT_VISIBLE_MOEDS,
-                              }
-                            }
-                            visibleMoeds[semester][moed] = c
-                            setVisibleMoeds({ ...visibleMoeds })
-                          }}
-                          key={moed}
-                          mx={5}
-                        >
-                          {MOEDS[moed]}
-                        </Chip>
-                      ))}
-                  </Table.Td>
-                </Table.Tr>
-              )
-            })}
+            .map((semester, yearIndex) => (
+              <GradeTableRow
+                courseId={courseId}
+                grades={grades}
+                semester={semester}
+                visibleGroups={visibleGroups}
+                setVisibleGroups={setVisibleGroups}
+                visibleMoeds={visibleMoeds}
+                setVisibleMoeds={setVisibleMoeds}
+                key={yearIndex}
+              />
+            ))}
         </Table.Tbody>
       </Table>
       <Box bg="#ffffff88" p="xs" my="xs" style={{ borderRadius: 10 }}>

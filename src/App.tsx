@@ -64,6 +64,7 @@ const App = () => {
                 w="100%"
                 maw={400}
                 mt="xs"
+                flex="none"
                 title="עזרו להוסיף מידע ל-TAU Factor!"
                 icon={<i className="fa-solid fa-cloud" />}
                 withCloseButton
@@ -153,7 +154,7 @@ const App = () => {
                   </b>
                   ({course})
                 </p>
-                <GradeChart grades={gradeInfo[course]} />
+                <GradeChart courseId={course} grades={gradeInfo[course]} />
               </div>
             )}
           </div>
