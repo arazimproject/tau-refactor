@@ -16,6 +16,7 @@ import { useState } from "react"
 import { useQueryParam, useURLValue } from "./hooks"
 import ColorHash from "color-hash"
 import GradeChart from "./GradeChart"
+import { AllTimeCourses, AllTimeGrades } from "./types"
 
 const hash = new ColorHash()
 
@@ -24,11 +25,11 @@ const App = () => {
   const [search, setSearch] = useState("")
   const [course, setCourse] = useQueryParam("course", "")
 
-  const [courseInfo, loadingCourseInfo] = useURLValue<any>(
-    "https://arazim-project.com/courses/courses.json"
+  const [courseInfo, loadingCourseInfo] = useURLValue<AllTimeCourses>(
+    "https://arazim-project.com/data/courses.json"
   )
-  const [gradeInfo, loadingGradeInfo] = useURLValue<any>(
-    "https://arazim-project.com/courses/grades.json"
+  const [gradeInfo, loadingGradeInfo] = useURLValue<AllTimeGrades>(
+    "https://arazim-project.com/data/grades.json"
   )
   const [alertOpen, setAlertOpen] = useLocalStorage({
     key: "Is Alert Open",

@@ -1,10 +1,10 @@
 import { BarChart, BarChartSeries } from "@mantine/charts"
 import { Box, Chip, Loader, Paper, Table, Text } from "@mantine/core"
 import { useState } from "react"
-import { CourseInfo, SemesterGrades } from "./typing"
 import ColorHash from "color-hash"
 import { formatSemester } from "./utilities"
 import { useURLValue } from "./hooks"
+import { SemesterCourses, SemesterGroupGradeInfo } from "./types"
 
 const MOEDS = ["קובע", "א'", "ב'", "ג'"]
 const hash = new ColorHash()
@@ -12,9 +12,11 @@ const COLORS = new Array(1000).fill(0).map((_, i) => hash.hex(i.toString()))
 
 const DEFAULT_VISIBLE_MOEDS = { 1: false, 2: false, 3: false }
 
-const getDefaultVisibleGroups = (grades: Record<string, SemesterGrades[]>) => {
+const getDefaultVisibleGroups = (
+  grades: Record<string, SemesterGroupGradeInfo[] | undefined> | undefined
+) => {
   const result: Record<string, boolean> = {}
-  if (grades["00"]) {
+  if (grades && grades["00"]) {
     for (const key in grades) {
       if (key !== "00") {
         result[key] = false
@@ -67,7 +69,12 @@ const GradeTableRow = ({
 }: {
   semester: string
   courseId: string
-  grades: Record<string, Record<string, SemesterGrades[]>>
+  grades:
+    | Record<
+        string,
+        Record<string, SemesterGroupGradeInfo[] | undefined> | undefined
+      >
+    | undefined
   visibleGroups: Record<string, Record<string, boolean>>
   setVisibleGroups: React.Dispatch<
     React.SetStateAction<Record<string, Record<string, boolean>>>
@@ -77,21 +84,28 @@ const GradeTableRow = ({
     React.SetStateAction<Record<string, Record<string, boolean>>>
   >
 }) => {
+  const [semesterInfo, loadingSemesterInfo] = useURLValue<SemesterCourses>(
+    `https://arazim-project.com/data/courses-${semester}.json`
+  )
+
+  if (!grades) {
+    return <></>
+  }
+
   const maxMoed = Math.max(
-    ...Object.values(grades[semester]).map((grade) =>
-      Math.max(...grade.map((v) => v.moed))
+    ...Object.values(grades[semester] ?? {}).map((grade) =>
+      Math.max(...(grade?.map((v) => v.moed ?? 0) ?? [0]))
     )
   )
   const groups = Object.keys(grades[semester] ?? {}).sort()
-  const mean = (grades[semester]["00"] ?? []).find((x) => x.moed === 0)?.mean
-  const [semesterInfo, loadingSemesterInfo] = useURLValue<
-    Record<string, CourseInfo>
-  >(`https://arazim-project.com/courses/courses-${semester}.json`)
+  const mean = ((grades[semester] ?? {})["00"] ?? []).find(
+    (x) => x.moed === 0
+  )?.mean
 
   const lecturers = new Set<string>()
   // Initially, only show teahers of שיעור.
   for (const group of semesterInfo[courseId]?.groups ?? []) {
-    if (!group.lessons.some((lesson) => lesson.type === "שיעור")) {
+    if (!group.lessons?.some((lesson) => lesson.type === "שיעור")) {
       continue
     }
 
@@ -180,7 +194,12 @@ const GradeChart = ({
   grades,
   courseId,
 }: {
-  grades: Record<string, Record<string, SemesterGrades[]>>
+  grades:
+    | Record<
+        string,
+        Record<string, SemesterGroupGradeInfo[] | undefined> | undefined
+      >
+    | undefined
   courseId: string
 }) => {
   const [visibleGroups, setVisibleGroups] = useState<
@@ -209,16 +228,16 @@ const GradeChart = ({
         continue
       }
 
-      for (const grade of grades[semester][group]) {
+      for (const grade of grades[semester][group] ?? []) {
         if (
-          (visibleMoeds[semester] ?? DEFAULT_VISIBLE_MOEDS)[grade.moed] ===
+          (visibleMoeds[semester] ?? DEFAULT_VISIBLE_MOEDS)[grade.moed!] ===
           false
         ) {
           continue
         }
 
         series.push({
-          name: formatSeriesName(semester, group, grade.moed),
+          name: formatSeriesName(semester, group, grade.moed!),
           color: COLORS[index],
         })
         index++
@@ -242,7 +261,7 @@ const GradeChart = ({
           {Object.keys(grades)
             .sort()
             .reverse()
-            .filter((year) => Object.keys(grades[year]).length !== 0)
+            .filter((year) => Object.keys(grades[year] ?? {}).length !== 0)
             .map((semester, yearIndex) => (
               <GradeTableRow
                 courseId={courseId}
@@ -283,13 +302,13 @@ const GradeChart = ({
             }
             for (const year in grades) {
               for (const group in grades[year]) {
-                for (const grade of grades[year][group]) {
+                for (const grade of grades[year][group] ?? []) {
                   let sum = 0
-                  for (const x of grade.distribution) {
+                  for (const x of grade.distribution!) {
                     sum += x
                   }
-                  result[formatSeriesName(year, group, grade.moed)] =
-                    ((grade.distribution[index] ?? 0) / sum) * 100
+                  result[formatSeriesName(year, group, grade.moed!)] =
+                    ((grade.distribution![index] ?? 0) / sum) * 100
                 }
               }
             }
