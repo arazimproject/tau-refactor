@@ -24,10 +24,10 @@ const Header = () => {
         style={{ fontWeight: "bold", fontSize: "1.17em" }}
         className="show-wide"
       >
-        ארזים | TAU Factor
+        ארזים | TAU Refactor
       </h3>
       <a
-        href="https://github.com/arazimproject/tau-factor"
+        href="https://github.com/arazimproject/tau-refactor"
         className="link show-wide"
       >
         <i

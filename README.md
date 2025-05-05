@@ -1,5 +1,5 @@
 <h1 align="center">
-    📊 TAU Factor
+    📊 TAU Refactor
     <br />
     <img src="https://img.shields.io/badge/updated-2025-purple.svg">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg">

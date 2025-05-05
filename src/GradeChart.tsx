@@ -1,10 +1,11 @@
 import { BarChart, BarChartSeries } from "@mantine/charts"
 import { Box, Chip, Loader, Paper, Table, Text } from "@mantine/core"
-import { useState } from "react"
+import { useLocalStorage } from "@mantine/hooks"
 import ColorHash from "color-hash"
-import { formatSemester } from "./utilities"
+import { useState } from "react"
 import { useURLValue } from "./hooks"
 import { SemesterCourses, SemesterGroupGradeInfo } from "./types"
+import { formatSemester } from "./utilities"
 
 const MOEDS = ["קובע", "א'", "ב'", "ג'"]
 const hash = new ColorHash()
@@ -208,6 +209,10 @@ const GradeChart = ({
   const [visibleMoeds, setVisibleMoeds] = useState<
     Record<string, Record<string, boolean>>
   >({})
+  const [view] = useLocalStorage({
+    key: "View",
+    defaultValue: "regular",
+  })
 
   if (!grades) {
     return <></>
@@ -278,7 +283,7 @@ const GradeChart = ({
       </Table>
       <Box bg="#ffffff88" p="xs" my="xs" style={{ borderRadius: 10 }}>
         <BarChart
-          type="stacked"
+          type={view === "stacked" ? "stacked" : undefined}
           tooltipProps={{
             content: ({ label, payload }) => (
               <ChartTooltip label={label} payload={payload} />

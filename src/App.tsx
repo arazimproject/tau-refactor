@@ -1,6 +1,6 @@
 import "@fortawesome/fontawesome-free/css/all.css"
-import "@mantine/core/styles.css"
 import "@mantine/charts/styles.css"
+import "@mantine/core/styles.css"
 
 import {
   Alert,
@@ -8,14 +8,15 @@ import {
   DirectionProvider,
   Loader,
   MantineProvider,
+  SegmentedControl,
 } from "@mantine/core"
-import Footer from "./Footer"
-import Header from "./Header"
 import { useColorScheme, useLocalStorage } from "@mantine/hooks"
-import { useState } from "react"
-import { useQueryParam, useURLValue } from "./hooks"
 import ColorHash from "color-hash"
+import { useState } from "react"
+import Footer from "./Footer"
 import GradeChart from "./GradeChart"
+import Header from "./Header"
+import { useQueryParam, useURLValue } from "./hooks"
 import { AllTimeCourses, AllTimeGrades } from "./types"
 
 const hash = new ColorHash()
@@ -34,6 +35,10 @@ const App = () => {
   const [alertOpen, setAlertOpen] = useLocalStorage({
     key: "Is Alert Open",
     defaultValue: true,
+  })
+  const [view, setView] = useLocalStorage({
+    key: "View",
+    defaultValue: "regular",
   })
 
   return (
@@ -66,13 +71,13 @@ const App = () => {
                 maw={400}
                 mt="xs"
                 flex="none"
-                title="עזרו להוסיף מידע ל-TAU Factor!"
+                title="עזרו להוסיף מידע ל-TAU Refactor!"
                 icon={<i className="fa-solid fa-cloud" />}
                 withCloseButton
                 onClose={() => setAlertOpen(false)}
               >
                 <p>
-                  מאגר הציונים של TAU Factor התקבל מהאתר המקורי
+                  מאגר הציונים של TAU Refactor התקבל מהאתר המקורי
                   www.tau-factor.com. בכדי להוסיף היסטוגרמות ציונים (אנונימיות)
                   ולעזור לכלל הסטודנטים, אנא התקינו את התוסף{" "}
                   <a
@@ -88,7 +93,7 @@ const App = () => {
                   התוסף לא מבצע שום פעולה בלי אישורכם והקוד שלו{" "}
                   <a
                     className="link handle text-accent"
-                    href="https://github.com/arazimproject/tau-factor-extension"
+                    href="https://github.com/arazimproject/tau-refactor-extension"
                     target="_blank"
                   >
                     פתוח
@@ -105,7 +110,8 @@ const App = () => {
               size="md"
               w="100%"
               maw={400}
-              my="md"
+              mt="md"
+              mb="xs"
               value={search}
               onChange={(courseName) => {
                 const split = courseName.split("(")
@@ -138,6 +144,20 @@ const App = () => {
               limit={20}
               maxDropdownHeight={300}
             />
+            <div>
+              תצוגה:
+              <SegmentedControl
+                data={[
+                  { label: "רגילה", value: "regular" },
+                  { label: "ערימה", value: "stacked" },
+                ]}
+                flex="none"
+                mb="md"
+                mr="xs"
+                value={view}
+                onChange={setView}
+              />
+            </div>
             {course !== "" && !loadingCourseInfo && !loadingGradeInfo && (
               <div
                 style={{
