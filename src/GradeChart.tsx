@@ -1,4 +1,10 @@
-import { BarChart, BarChartSeries } from "@mantine/charts"
+import {
+  BarChart,
+  BarChartProps,
+  BarChartSeries,
+  LineChart,
+  LineChartProps,
+} from "@mantine/charts"
 import { Box, Chip, Loader, Paper, Table, Text } from "@mantine/core"
 import { useLocalStorage } from "@mantine/hooks"
 import ColorHash from "color-hash"
@@ -250,6 +256,47 @@ const GradeChart = ({
     }
   }
 
+  const chartProps: BarChartProps & LineChartProps = {
+    mt: "xs",
+    h: 600,
+    tooltipProps: {
+      content: ({ label, payload }) => (
+        <ChartTooltip label={label} payload={payload} />
+      ),
+    },
+    data: limits.slice(0, -1).map((_, index) => {
+      let topLimit = limits[index + 1] - 1
+      if (topLimit === 99) {
+        topLimit = 100
+      } else if (topLimit === 199) {
+        topLimit = 200
+      }
+      let range = `${limits[index]}-${topLimit}`
+      if (range === "100-200") {
+        range = "200-210"
+      }
+      const result: Record<string, any> = {
+        range,
+      }
+      for (const year in grades) {
+        for (const group in grades[year]) {
+          for (const grade of grades[year][group] ?? []) {
+            let sum = 0
+            for (const x of grade.distribution!) {
+              sum += x
+            }
+            result[formatSeriesName(year, group, grade.moed!)] =
+              ((grade.distribution![index] ?? 0) / sum) * 100
+          }
+        }
+      }
+
+      return result
+    }),
+    dataKey: "range",
+    series,
+  }
+
   return (
     <>
       <Table verticalSpacing={5}>
@@ -282,47 +329,13 @@ const GradeChart = ({
         </Table.Tbody>
       </Table>
       <Box bg="#ffffff88" p="xs" my="xs" style={{ borderRadius: 10 }}>
-        <BarChart
-          type={view === "stacked" ? "stacked" : undefined}
-          tooltipProps={{
-            content: ({ label, payload }) => (
-              <ChartTooltip label={label} payload={payload} />
-            ),
-          }}
-          mt="xs"
-          h={600}
-          data={limits.slice(0, -1).map((_, index) => {
-            let topLimit = limits[index + 1] - 1
-            if (topLimit === 99) {
-              topLimit = 100
-            } else if (topLimit === 199) {
-              topLimit = 200
-            }
-            let range = `${limits[index]}-${topLimit}`
-            if (range === "100-200") {
-              range = "200-210"
-            }
-            const result: Record<string, any> = {
-              range,
-            }
-            for (const year in grades) {
-              for (const group in grades[year]) {
-                for (const grade of grades[year][group] ?? []) {
-                  let sum = 0
-                  for (const x of grade.distribution!) {
-                    sum += x
-                  }
-                  result[formatSeriesName(year, group, grade.moed!)] =
-                    ((grade.distribution![index] ?? 0) / sum) * 100
-                }
-              }
-            }
-
-            return result
-          })}
-          dataKey="range"
-          series={series}
-        />
+        {(view === "stacked" || view === "regular") && (
+          <BarChart
+            type={view === "stacked" ? "stacked" : undefined}
+            {...chartProps}
+          />
+        )}
+        {view === "graph" && <LineChart curveType="linear" {...chartProps} />}
       </Box>
     </>
   )

@@ -150,6 +150,7 @@ const App = () => {
                 data={[
                   { label: "רגילה", value: "regular" },
                   { label: "ערימה", value: "stacked" },
+                  { label: "גרף", value: "graph" },
                 ]}
                 flex="none"
                 mb="md"
